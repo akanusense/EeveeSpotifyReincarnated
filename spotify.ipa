@@ -1,0 +1,35 @@
+name: Build iOS IPA
+
+# Allows you to manually trigger this build from GitHub Mobile
+on:
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Add your specific build steps here (e.g., for Flutter, React Native, or native Xcode)
+      # Example for native Xcode (unsigned / development build):
+      - name: Build Xcode Archive
+        run: |
+          xcodebuild archive \
+            -workspace ios/YourApp.xcworkspace \
+            -scheme YourScheme \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/YourApp.xcarchive
+            
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/YourApp.xcarchive \
+            -exportPath $RUNNER_TEMP/exported \
+            -exportOptionsPlist ios/ExportOptions.plist
+            
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: ${{ runner.temp }}/exported/*.ipa
